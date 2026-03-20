@@ -1,0 +1,78 @@
+{
+  "name": "smart-commit",
+  "displayName": "Smart Commit",
+  "description": "AI-powered git commit messages using Ollama (llama3.2)",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onView:smartCommit.panel",
+    "onCommand:smartCommit.run"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "smartCommit.run",
+        "title": "Smart Commit",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "smartCommit.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "smartCommitContainer",
+          "title": "Smart Commit",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "smartCommitContainer": [
+        {
+          "type": "webview",
+          "id": "smartCommit.panel",
+          "name": "Smart Commit"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Smart Commit",
+      "properties": {
+        "smartCommit.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL"
+        },
+        "smartCommit.model": {
+          "type": "string",
+          "default": "llama3.2",
+          "description": "Ollama model to use for commit message generation"
+        },
+        "smartCommit.autoPush": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically push after committing"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
