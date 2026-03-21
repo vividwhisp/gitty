@@ -79,13 +79,15 @@ Git diff:
 ${diffContent}
 
 Requirements:
-- First line: conventional commit format — type(scope): short description (max 72 chars)
+- First line: conventional commit format - type(scope): short description (max 72 chars)
   Types: feat, fix, refactor, docs, style, test, chore, perf
 - Leave a blank line after the first line
 - Then write 2-4 bullet points explaining WHAT changed and WHY
 - Be specific, not vague
 - Do NOT include any explanation outside of the commit message itself
 - Do NOT wrap in code blocks or quotes
+- Do NOT say things like "Here is the commit message" or "Here is a complete commit message"
+- Output only the final commit message text with no introduction and no closing note
 
 Example format:
 feat(auth): add JWT refresh token rotation
@@ -99,11 +101,68 @@ Now write the commit message:`;
 }
 
 function cleanCommitMessage(raw: string): string {
-  // Strip markdown code fences if model wraps in them
-  let msg = raw.replace(/^```[a-z]*\n?/i, "").replace(/```$/i, "").trim();
-  // Remove any leading "Commit message:" or similar labels
-  msg = msg.replace(/^(commit message:|here'?s? (the|a|your) commit message:?)\s*/i, "").trim();
-  return msg;
+  const normalized = raw
+    .replace(/\r\n/g, "\n")
+    .replace(/^```[a-z]*\n?/i, "")
+    .replace(/\n```$/i, "")
+    .trim();
+
+  const lines = normalized.split("\n").map((line) => line.trim());
+  const commitHeaderIndex = lines.findIndex(isCommitHeader);
+
+  if (commitHeaderIndex === -1) {
+    return normalized;
+  }
+
+  const extracted: string[] = [lines[commitHeaderIndex]];
+  let sawBullet = false;
+
+  for (const line of lines.slice(commitHeaderIndex + 1)) {
+    if (!line) {
+      if (extracted[extracted.length - 1] !== "") {
+        extracted.push("");
+      }
+      continue;
+    }
+
+    if (isBulletLine(line)) {
+      sawBullet = true;
+      extracted.push(normalizeBullet(line));
+      continue;
+    }
+
+    if (!sawBullet && isIntroLabel(line)) {
+      continue;
+    }
+
+    if (sawBullet) {
+      break;
+    }
+  }
+
+  while (extracted[extracted.length - 1] === "") {
+    extracted.pop();
+  }
+
+  return extracted.join("\n").trim();
+}
+
+function isCommitHeader(line: string): boolean {
+  return /^(feat|fix|refactor|docs|style|test|chore|perf)(\([^)]+\))?!?:\s+\S+/i.test(
+    line
+  );
+}
+
+function isBulletLine(line: string): boolean {
+  return /^[-*•]\s+/.test(line);
+}
+
+function normalizeBullet(line: string): string {
+  return line.replace(/^([*•])\s+/, "- ");
+}
+
+function isIntroLabel(line: string): boolean {
+  return /^(commit message|message|here'?s|here is|below is|this is)\b/i.test(line);
 }
 
 export async function checkOllamaAvailable(ollamaUrl: string): Promise<boolean> {
