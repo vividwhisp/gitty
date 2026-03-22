@@ -99,6 +99,7 @@ function getConfig() {
     ollamaUrl: config.get<string>("ollamaUrl") || "http://localhost:11434",
     model: config.get<string>("model") || "llama3.2",
     autoPush: config.get<boolean>("autoPush") ?? true,
+    requestTimeoutSeconds: config.get<number>("requestTimeoutSeconds") ?? 180,
   };
 }
 
@@ -177,7 +178,12 @@ async function handleGenerate() {
     addLog(`→ Generating commit message with ${cfg.model}...`);
     refreshWebview();
 
-    const message = await generateCommitMessage(currentDiff, cfg.ollamaUrl, cfg.model);
+    const message = await generateCommitMessage(
+      currentDiff,
+      cfg.ollamaUrl,
+      cfg.model,
+      cfg.requestTimeoutSeconds * 1000
+    );
     panelState.commitMessage = message;
     addLog("✓ Commit message generated!");
 

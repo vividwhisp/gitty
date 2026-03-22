@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateCommitMessage = generateCommitMessage;
 exports.checkOllamaAvailable = checkOllamaAvailable;
 const http = __importStar(require("http"));
-async function generateCommitMessage(diff, ollamaUrl, model) {
+async function generateCommitMessage(diff, ollamaUrl, model, timeoutMs = 180000) {
     const prompt = buildPrompt(diff);
     return new Promise((resolve, reject) => {
         const body = JSON.stringify({
@@ -77,9 +77,9 @@ async function generateCommitMessage(diff, ollamaUrl, model) {
         req.on("error", (err) => {
             reject(new Error(`Cannot connect to Ollama at ${ollamaUrl}. Make sure Ollama is running.\n${err.message}`));
         });
-        req.setTimeout(60000, () => {
+        req.setTimeout(timeoutMs, () => {
             req.destroy();
-            reject(new Error("Ollama request timed out after 60 seconds"));
+            reject(new Error(`Ollama request timed out after ${Math.round(timeoutMs / 1000)} seconds`));
         });
         req.write(body);
         req.end();

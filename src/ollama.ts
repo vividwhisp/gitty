@@ -4,7 +4,8 @@ import { GitDiff } from "./git";
 export async function generateCommitMessage(
   diff: GitDiff,
   ollamaUrl: string,
-  model: string
+  model: string,
+  timeoutMs = 180000
 ): Promise<string> {
   const prompt = buildPrompt(diff);
 
@@ -55,9 +56,13 @@ export async function generateCommitMessage(
       );
     });
 
-    req.setTimeout(60000, () => {
+    req.setTimeout(timeoutMs, () => {
       req.destroy();
-      reject(new Error("Ollama request timed out after 60 seconds"));
+      reject(
+        new Error(
+          `Ollama request timed out after ${Math.round(timeoutMs / 1000)} seconds`
+        )
+      );
     });
 
     req.write(body);
